@@ -2,14 +2,14 @@ ext {
     // FIXME replace with yours
     moduleMinRiruApiVersion = 9
     moduleMinRiruVersionName = "v22.0"
-    moduleRiruApiVersion = 10
+    moduleRiruApiVersion = 24
 
     moduleId = "template"
     moduleName = "Template"
     moduleAuthor = "Template"
     moduleDescription = "Riru module template. This modules requires Riru $moduleMinRiruVersionName or above."
-    moduleVersion = "v11.0"
-    moduleVersionCode = 11
+    moduleVersion = "v24.0"
+    moduleVersionCode = 24
 
     moduleProp = [
             // This ID is used as Magisk module ID, you should never change it

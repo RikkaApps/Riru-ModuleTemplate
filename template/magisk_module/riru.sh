@@ -12,6 +12,7 @@ RIRU_MODULE_API_VERSION=%%%RIRU_MODULE_API_VERSION%%%
 RIRU_MODULE_MIN_API_VERSION=%%%RIRU_MODULE_MIN_API_VERSION%%%
 RIRU_MODULE_MIN_RIRU_VERSION_NAME="%%%RIRU_MODULE_MIN_RIRU_VERSION_NAME%%%"
 
+# This function will be used when util_functions.sh not exits
 check_riru_version() {
   RIRU_CORE_MODULES_PATH=/data/adb/modules/riru-core
   RIRU_CORE_MODULES_UPDATE_PATH=/data/adb/modules_update/riru-core
@@ -28,6 +29,19 @@ check_riru_version() {
     ui_print "*********************************************************"
     ui_print "! Riru $RIRU_MODULE_MIN_RIRU_VERSION_NAME or above is required"
     ui_print "! Please upgrade Riru from Magisk Manager or https://github.com/RikkaApps/Riru/releases"
+    abort "*********************************************************"
+  fi
+}
+
+# This function will be used when util_functions.sh not exits
+enforce_install_from_magisk_app() {
+  if $BOOTMOE; then
+    ui_print "- Installing from Magisk app"
+  else
+    ui_print "*********************************************************"
+    ui_print "! Install from recovery is NOT supported"
+    ui_print "! Some recovery has broken implementations, install with such recovery will finally cause Riru or Riru modules not working"
+    ui_print "! Please install from Magisk app"
     abort "*********************************************************"
   fi
 }
@@ -50,3 +64,4 @@ else
 fi
 
 check_riru_version
+enforce_install_from_magisk_app

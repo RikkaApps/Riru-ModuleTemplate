@@ -60,105 +60,91 @@ static void onModuleLoaded() {
     // called when the shared library of Riru core is loaded
 }
 
+static RiruVersionedModuleInfo *module = nullptr;
+
 extern "C" {
 
 int riru_api_version;
-RiruApiV9 *riru_api_v9;
-RiruApiV11 *riru_api_v11;
+RiruApi *riru_api = nullptr;
+const char *riru_magisk_module_path = nullptr;
 
-/*
- * Init will be called three times.
- *
- * The first time:
- *   Returns the highest version number supported by both Riru and the module.
- *
- *   arg: (int *) Riru's API version
- *   returns: (int *) the highest possible API version
- *
- * The second time:
- *   Returns the RiruModuleX struct created by the module.
- *   (X is the return of the first call)
- *
- *   arg: (RiruApiVX *) RiruApi strcut, this pointer can be saved for further use
- *   returns: (RiruModuleX *) RiruModule strcut
- *
- * The third time:
- *   Let the module to cleanup (such as RiruModuleX struct created before).
- *
- *   arg: null
- *   returns: (ignored)
- *
- */
-void *init(void *arg) {
+#ifndef RIRU_MODULE_LEGACY_INIT
+RiruVersionedModuleInfo *init(Riru *riru) {
+    if (module == nullptr) {
+        module = (RiruVersionedModuleInfo *) malloc(sizeof(RiruVersionedModuleInfo));
+        memset(module, 0, sizeof(RiruModuleInfo));
+        module->moduleInfo.supportHide = true;
+        module->moduleInfo.version = RIRU_MODULE_VERSION;
+        module->moduleInfo.versionName = RIRU_MODULE_VERSION_NAME;
+        module->moduleInfo.onModuleLoaded = onModuleLoaded;
+        module->moduleInfo.shouldSkipUid = shouldSkipUid;
+        module->moduleInfo.forkAndSpecializePre = forkAndSpecializePre;
+        module->moduleInfo.forkAndSpecializePost = forkAndSpecializePost;
+        module->moduleInfo.specializeAppProcessPre = specializeAppProcessPre;
+        module->moduleInfo.specializeAppProcessPost = specializeAppProcessPost;
+        module->moduleInfo.forkSystemServerPre = forkSystemServerPre;
+        module->moduleInfo.forkSystemServerPost = forkSystemServerPost;
+    }
+
+    auto core_max_api_version = riru->riruApiVersion;
+    if (core_max_api_version < RIRU_MODULE_MIN_API_VERSION) {
+        // This is possible if the user downgrade Riru
+        return nullptr;
+    }
+    riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
+    module->moduleApiVersion = riru_api_version;
+
+    riru_api = riru->riruApi;
+    riru_magisk_module_path = riru->magiskModulePath;
+    return module;
+}
+#else
+RiruVersionedModuleInfo *init(Riru *riru) {
     static int step = 0;
     step += 1;
 
-    static void *_module;
+    if (module == nullptr) {
+        module = (RiruVersionedModuleInfo *) malloc(sizeof(RiruVersionedModuleInfo));
+        memset(module, 0, sizeof(RiruModuleInfo));
+        module->moduleInfo.supportHide = true;
+        module->moduleInfo.version = RIRU_MODULE_VERSION;
+        module->moduleInfo.versionName = RIRU_MODULE_VERSION_NAME;
+        module->moduleInfo.onModuleLoaded = onModuleLoaded;
+        module->moduleInfo.shouldSkipUid = shouldSkipUid;
+        module->moduleInfo.forkAndSpecializePre = forkAndSpecializePre;
+        module->moduleInfo.forkAndSpecializePost = forkAndSpecializePost;
+        module->moduleInfo.specializeAppProcessPre = specializeAppProcessPre;
+        module->moduleInfo.specializeAppProcessPost = specializeAppProcessPost;
+        module->moduleInfo.forkSystemServerPre = forkSystemServerPre;
+        module->moduleInfo.forkSystemServerPost = forkSystemServerPost;
+    }
 
     switch (step) {
         case 1: {
-            auto core_max_api_version = *(int *) arg;
+            auto core_max_api_version = riru->riruApiVersion;
+            if (core_max_api_version < RIRU_MODULE_MIN_API_VERSION) {
+                // This is possible if the user downgrade Riru
+                return nullptr;
+            }
+
             riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
-            return &riru_api_version;
-        }
-        case 2: {
-            switch (riru_api_version) {
-                case 11: {
-                    riru_api_v11 = (RiruApiV11 *) arg;
-
-                    auto module = (RiruModuleInfoV11 *) malloc(sizeof(RiruModuleInfoV11));
-                    memset(module, 0, sizeof(RiruModuleInfoV11));
-                    _module = module;
-
-                    module->supportHide = true;
-
-                    module->version = RIRU_MODULE_VERSION;
-                    module->versionName = RIRU_MODULE_VERSION_NAME;
-                    module->onModuleLoaded = onModuleLoaded;
-                    module->shouldSkipUid = shouldSkipUid;
-                    module->forkAndSpecializePre = forkAndSpecializePre;
-                    module->forkAndSpecializePost = forkAndSpecializePost;
-                    module->specializeAppProcessPre = specializeAppProcessPre;
-                    module->specializeAppProcessPost = specializeAppProcessPost;
-                    module->forkSystemServerPre = forkSystemServerPre;
-                    module->forkSystemServerPost = forkSystemServerPost;
-                    return module;
-                }
-                // RiruApiV10 and RiruModuleInfoV10 are equal to V9
-                case 10:
-                case 9: {
-                    riru_api_v9 = (RiruApiV9 *) arg;
-
-                    auto module = (RiruModuleInfoV9 *) malloc(sizeof(RiruModuleInfoV9));
-                    memset(module, 0, sizeof(RiruModuleInfoV9));
-                    _module = module;
-
-                    module->supportHide = true;
-
-                    module->version = RIRU_MODULE_VERSION;
-                    module->versionName = RIRU_MODULE_VERSION_NAME;
-                    module->onModuleLoaded = onModuleLoaded;
-                    module->shouldSkipUid = shouldSkipUid;
-                    module->forkAndSpecializePre = forkAndSpecializePre;
-                    module->forkAndSpecializePost = forkAndSpecializePost;
-                    module->specializeAppProcessPre = specializeAppProcessPre;
-                    module->specializeAppProcessPost = specializeAppProcessPost;
-                    module->forkSystemServerPre = forkSystemServerPre;
-                    module->forkSystemServerPost = forkSystemServerPost;
-                    return module;
-                }
-                default: {
-                    return nullptr;
-                }
+            if (riru_api_version >= 24) {
+                module->moduleApiVersion = riru_api_version;
+                riru_api = riru->riruApi;
+                riru_magisk_module_path = riru->magiskModulePath;
+                return module;
+            } else {
+                return (RiruVersionedModuleInfo *) &riru_api_version;
             }
         }
-        case 3: {
-            free(_module);
-            return nullptr;
+        case 2: {
+            riru_api = (RiruApi *) riru;
+            return (RiruVersionedModuleInfo *) &module->moduleInfo;
         }
         default: {
             return nullptr;
         }
     }
 }
+#endif
 }

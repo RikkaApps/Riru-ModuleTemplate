@@ -12,7 +12,8 @@ android {
                 arguments "-DMODULE_NAME:STRING=riru_$moduleId",
                         "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion",
                         "-DRIRU_MODULE_VERSION=$moduleVersionCode",
-                        "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\""
+                        "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\"",
+                        "-DRIRU_MODULE_MIN_API_VERSION=$moduleMinRiruApiVersion"
             }
         }
     }
@@ -40,7 +41,7 @@ dependencies {
     // you may have to add android.prefabVersion=1.1.2 in your gradle.properties.
     // See https://github.com/google/prefab/issues/122
 
-    implementation 'dev.rikka.ndk:riru:11'
+    implementation 'dev.rikka.ndk:riru:24.0.0'
 }
 
 def outDir = file("$rootDir/out")
