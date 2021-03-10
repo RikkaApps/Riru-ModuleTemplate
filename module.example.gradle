@@ -1,31 +1,23 @@
 ext {
     // FIXME replace with yours
-    moduleId = "template"
-    moduleName = "Template"
-    moduleAuthor = "Template"
-    moduleDescription = "Riru module template."
-    moduleVersion = "v1.0"
-    moduleVersionCode = 1
-
     moduleMinRiruApiVersion = 9
     moduleMinRiruVersionName = "v22.0"
     moduleRiruApiVersion = 10
 
+    moduleId = "template"
+    moduleName = "Template"
+    moduleAuthor = "Template"
+    moduleDescription = "Riru module template. This modules requires Riru $moduleMinRiruVersionName or above."
+    moduleVersion = "v11.0"
+    moduleVersionCode = 11
+
     moduleProp = [
+            // This ID is used as Magisk module ID, you should never change it
+            id         : moduleId,
             name       : moduleName,
             version    : moduleVersion,
             versionCode: moduleVersionCode.toString(),
             author     : moduleAuthor,
             description: moduleDescription,
-            minApi     : moduleMinRiruApiVersion
-    ]
-
-    magiskModuleProp = [
-            id         : "riru-${moduleId.replace('_', '-')}",
-            name       : "Riru - ${moduleProp['name']}",
-            version    : moduleProp['version'],
-            versionCode: moduleProp['versionCode'],
-            author     : moduleProp['author'],
-            description: moduleProp['description']
     ]
 }

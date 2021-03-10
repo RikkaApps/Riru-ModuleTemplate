@@ -8,11 +8,11 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         externalNativeBuild {
             cmake {
+                // You can remove this "riru_" prefix if this module does not need to support Riru pre-v24
                 arguments "-DMODULE_NAME:STRING=riru_$moduleId",
                         "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion",
                         "-DRIRU_MODULE_VERSION=$moduleVersionCode",
                         "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\""
-
             }
         }
     }
@@ -27,6 +27,10 @@ android {
     }
 }
 
+repositories {
+    mavenLocal()
+}
+
 dependencies {
     // This is prefab aar which contains "riru.h"
     // If you want to use older versions of AGP,
@@ -36,14 +40,12 @@ dependencies {
     // you may have to add android.prefabVersion=1.1.2 in your gradle.properties.
     // See https://github.com/google/prefab/issues/122
 
-    implementation 'dev.rikka.ndk:riru:10'
+    implementation 'dev.rikka.ndk:riru:11'
 }
 
 def outDir = file("$rootDir/out")
 def magiskDir = file("$outDir/magisk_module")
-def zipName = "${magiskModuleProp['id'].replace('_', '-')}-${magiskModuleProp['version']}.zip"
-def riruDir = "$magiskDir/riru"
-
+def zipName = "${moduleProp['id']}-${moduleVersion}.zip"
 
 import org.apache.tools.ant.filters.FixCrLfFilter
 
@@ -89,18 +91,9 @@ android.libraryVariants.all { variant ->
 
         // generate module.prop
         def modulePropText = ""
-        magiskModuleProp.each { k, v -> modulePropText += "$k=$v\n" }
+        moduleProp.each { k, v -> modulePropText += "$k=$v\n" }
         modulePropText = modulePropText.trim()
         file("$magiskDir/module.prop").text = modulePropText
-
-        // generate module.prop for Riru
-        def riruModulePropText = ""
-        moduleProp.each { k, v -> riruModulePropText += "$k=$v\n" }
-        riruModulePropText = riruModulePropText.trim()
-        file(riruDir).mkdirs()
-
-        // module.prop.new will be renamed to module.prop in post-fs-data.sh
-        file("$riruDir/module.prop.new").text = riruModulePropText
 
         // copy native files
         def nativeOutDir = file("build/intermediates/cmake/$variant.name/obj")

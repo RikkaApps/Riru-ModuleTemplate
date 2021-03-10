@@ -27,7 +27,6 @@ static void specializeAppProcessPre(
         jboolean *startChildZygote, jstring *instructionSet, jstring *appDataDir,
         jboolean *isTopApp, jobjectArray *pkgDataInfoList, jobjectArray *whitelistedDataInfoList,
         jboolean *bindMountAppDataDirs, jboolean *bindMountAppStorageDirs) {
-    // added from Android 10, but disabled at least in Google Pixel devices
 }
 
 static void specializeAppProcessPost(
@@ -38,7 +37,6 @@ static void specializeAppProcessPost(
 static void forkSystemServerPre(
         JNIEnv *env, jclass clazz, uid_t *uid, gid_t *gid, jintArray *gids, jint *runtimeFlags,
         jobjectArray *rlimits, jlong *permittedCapabilities, jlong *effectiveCapabilities) {
-
 }
 
 static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
@@ -66,6 +64,7 @@ extern "C" {
 
 int riru_api_version;
 RiruApiV9 *riru_api_v9;
+RiruApiV11 *riru_api_v11;
 
 /*
  * Init will be called three times.
@@ -104,6 +103,27 @@ void *init(void *arg) {
         }
         case 2: {
             switch (riru_api_version) {
+                case 11: {
+                    riru_api_v11 = (RiruApiV11 *) arg;
+
+                    auto module = (RiruModuleInfoV11 *) malloc(sizeof(RiruModuleInfoV11));
+                    memset(module, 0, sizeof(RiruModuleInfoV11));
+                    _module = module;
+
+                    module->supportHide = true;
+
+                    module->version = RIRU_MODULE_VERSION;
+                    module->versionName = RIRU_MODULE_VERSION_NAME;
+                    module->onModuleLoaded = onModuleLoaded;
+                    module->shouldSkipUid = shouldSkipUid;
+                    module->forkAndSpecializePre = forkAndSpecializePre;
+                    module->forkAndSpecializePost = forkAndSpecializePost;
+                    module->specializeAppProcessPre = specializeAppProcessPre;
+                    module->specializeAppProcessPost = specializeAppProcessPost;
+                    module->forkSystemServerPre = forkSystemServerPre;
+                    module->forkSystemServerPost = forkSystemServerPost;
+                    return module;
+                }
                 // RiruApiV10 and RiruModuleInfoV10 are equal to V9
                 case 10:
                 case 9: {

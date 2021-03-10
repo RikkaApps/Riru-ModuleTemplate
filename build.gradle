@@ -8,8 +8,8 @@ idea.module {
 
 buildscript {
     repositories {
-        google()
         mavenCentral()
+        google()
         jcenter()
     }
     dependencies {
@@ -19,8 +19,8 @@ buildscript {
 
 allprojects {
     repositories {
-        google()
         mavenCentral()
+        google()
         jcenter()
     }
 }
