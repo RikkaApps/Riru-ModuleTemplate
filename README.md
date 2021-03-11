@@ -13,11 +13,30 @@
 
 A Riru module is a Magisk module, please read [Magisk module document](https://topjohnwu.github.io/Magisk/guides.html#magisk-modules) first.
 
-In addition, currently the only necessary file (folder) is `/data/adb/riru/modules/<name>`. Riru will check if it exists and load `/system/lib(64)/libriru_<name>.so`.
+### Riru v24+
+
+If the folder `$MODPATH/riru` exists, the module is considered as a Riru module. All files in `$MODPATH/riru/lib(64)` will be loaded by Riru.
+
+### Riru pre-v24
+
+If the folder `/data/adb/riru/modules/<name>` exists, `/system/lib(64)/libriru_<name>.so` will be loaded by Riru. Module installer needs to create this folder.
+
+## Choose the minimum supported version
+
+If your module is new, always choose the latest version.
+
+In other cases, our recommendation is, if a new version Riru of released, raise the minimum supported version to latest when the new Riru comes stable.
 
 ## API changes
 
-### API v10 (from Riru v23)
+### API 24 (Riru v24)
+
+- The Riru API version is unified with Riru version, now the API version is 24
+- The `/data/adb/riru/modules/<name>` folder is deprecated, modules only need to place library files in `$MODPATH/riru/lib(64)` (see `customize.sh` `post-fs-data.sh`)
+- The `init` function is called only once (see `main.cpp`)
+- It's recommended to place modules files in the Magisk module folder, zygote has permission read this folder directly (the path is passed through `init` function, see `main.cpp`)
+
+### API 10 (Riru v23)
 
 <details>
   <summary><b>Background of rirud:</b></summary>
@@ -93,7 +112,7 @@ while (true) {
 
 Example implementation: <https://github.com/RikkaApps/Riru-LocationReportEnabler/commit/89b2e396efcd928121ba3d254b96af1560cfaf4d>
 
-### API v9 (from Riru v22)
+### API 9 (Riru v22)
 
 #### API
 
