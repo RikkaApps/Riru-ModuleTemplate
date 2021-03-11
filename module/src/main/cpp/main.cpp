@@ -103,7 +103,7 @@ RiruVersionedModuleInfo *init(Riru *riru) {
     module.moduleApiVersion = riru_api_version;
 
     riru_api = riru->riruApi;
-    riru_magisk_module_path = riru->magiskModulePath;
+    riru_magisk_module_path = strdup(riru->magiskModulePath);
     return &module;
 }
 #else
@@ -118,7 +118,7 @@ RiruVersionedModuleInfo *init(Riru *riru) {
             if (riru_api_version >= 24) {
                 module.moduleApiVersion = riru_api_version;
                 riru_api = riru->riruApi;
-                riru_magisk_module_path = riru->magiskModulePath;
+                riru_magisk_module_path = strdup(riru->magiskModulePath);
                 return &module;
             } else {
                 return (RiruVersionedModuleInfo *) &riru_api_version;
