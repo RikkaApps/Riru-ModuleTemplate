@@ -10,14 +10,19 @@ static void forkAndSpecializePre(
         jintArray *fdsToClose, jintArray *fdsToIgnore, jboolean *is_child_zygote,
         jstring *instructionSet, jstring *appDataDir, jboolean *isTopApp, jobjectArray *pkgDataInfoList,
         jobjectArray *whitelistedDataInfoList, jboolean *bindMountAppDataDirs, jboolean *bindMountAppStorageDirs) {
+    // Called "before" com_android_internal_os_Zygote_nativeForkAndSpecialize in frameworks/base/core/jni/com_android_internal_os_Zygote.cpp
+    // Parameters are pointers, you can change the value of them if you want
+    // Some parameters are not exist is older Android versions, in this case, they are null or 0
 }
 
 static void forkAndSpecializePost(JNIEnv *env, jclass clazz, jint res) {
+    // Called "after" com_android_internal_os_Zygote_nativeForkAndSpecialize in frameworks/base/core/jni/com_android_internal_os_Zygote.cpp
+    // "res" is the return value of com_android_internal_os_Zygote_nativeForkAndSpecialize
+
     if (res == 0) {
-        // in app process
+        // In app process
     } else {
-        // in zygote process, res is child pid
-        // don't print log here, see https://github.com/RikkaApps/Riru/blob/77adfd6a4a6a81bfd20569c910bc4854f2f84f5e/riru-core/jni/main/jni_native_method.cpp#L55-L66
+        // In zygote process
     }
 }
 
@@ -27,29 +32,37 @@ static void specializeAppProcessPre(
         jboolean *startChildZygote, jstring *instructionSet, jstring *appDataDir,
         jboolean *isTopApp, jobjectArray *pkgDataInfoList, jobjectArray *whitelistedDataInfoList,
         jboolean *bindMountAppDataDirs, jboolean *bindMountAppStorageDirs) {
+    // Called "before" com_android_internal_os_Zygote_nativeSpecializeAppProcess in frameworks/base/core/jni/com_android_internal_os_Zygote.cpp
+    // Parameters are pointers, you can change the value of them if you want
+    // Some parameters are not exist is older Android versions, in this case, they are null or 0
 }
 
 static void specializeAppProcessPost(
         JNIEnv *env, jclass clazz) {
-    // added from Android 10, but disabled at least in Google Pixel devices
+    // Called "after" com_android_internal_os_Zygote_nativeSpecializeAppProcess in frameworks/base/core/jni/com_android_internal_os_Zygote.cpp
+
 }
 
 static void forkSystemServerPre(
         JNIEnv *env, jclass clazz, uid_t *uid, gid_t *gid, jintArray *gids, jint *runtimeFlags,
         jobjectArray *rlimits, jlong *permittedCapabilities, jlong *effectiveCapabilities) {
+    // Called "before" com_android_internal_os_Zygote_forkSystemServer in frameworks/base/core/jni/com_android_internal_os_Zygote.cpp
+    // Parameters are pointers, you can change the value of them if you want
+    // Some parameters are not exist is older Android versions, in this case, they are null or 0
 }
 
 static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
+    // Called "after" com_android_internal_os_Zygote_forkSystemServer in frameworks/base/core/jni/com_android_internal_os_Zygote.cpp
+
     if (res == 0) {
-        // in system server process
+        // In system server process
     } else {
-        // in zygote process, res is child pid
-        // don't print log here, see https://github.com/RikkaApps/Riru/blob/77adfd6a4a6a81bfd20569c910bc4854f2f84f5e/riru-core/jni/main/jni_native_method.cpp#L55-L66
+        // In zygote process
     }
 }
 
 static int shouldSkipUid(int uid) {
-    // By default (the module does not provide this function in init), Riru will only call
+    // By default (if the module does not provide this function in init), Riru will only call
     // module functions in "normal app processes" (10000 <= uid % 100000 <= 19999)
 
     // Provide this function so that the module can control if a specific uid should be skipped
@@ -57,7 +70,7 @@ static int shouldSkipUid(int uid) {
 }
 
 static void onModuleLoaded() {
-    // called when the shared library of Riru core is loaded
+    // Called when this library is loaded by Riru
 }
 
 extern "C" {
