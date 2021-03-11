@@ -62,6 +62,3 @@ else
     ui_print "- Can't find /data/adb/riru/util_functions.sh"
   fi
 fi
-
-check_riru_version
-enforce_install_from_magisk_app

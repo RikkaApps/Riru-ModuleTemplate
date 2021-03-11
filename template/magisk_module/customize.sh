@@ -23,6 +23,10 @@ fi
 extract "$ZIPFILE" 'riru.sh' "$MODPATH"
 . $MODPATH/riru.sh
 
+# Functions from riru.sh
+check_riru_version
+enforce_install_from_magisk_app
+
 # Check architecture
 if [ "$ARCH" != "arm" ] && [ "$ARCH" != "arm64" ] && [ "$ARCH" != "x86" ] && [ "$ARCH" != "x64" ]; then
   abort "! Unsupported platform: $ARCH"
