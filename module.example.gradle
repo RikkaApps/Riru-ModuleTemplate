@@ -8,7 +8,7 @@ ext {
     moduleName = "Template"
     moduleAuthor = "Template"
     moduleDescription = "Riru module template. This modules requires Riru $moduleMinRiruVersionName or above."
-    moduleVersion = "v24.0"
+    moduleVersion = "v24.0.0"
     moduleVersionCode = 24
 
     moduleProp = [

@@ -60,87 +60,62 @@ static void onModuleLoaded() {
     // called when the shared library of Riru core is loaded
 }
 
-static RiruVersionedModuleInfo *module = nullptr;
-
 extern "C" {
 
 int riru_api_version;
 RiruApi *riru_api = nullptr;
 const char *riru_magisk_module_path = nullptr;
 
+static auto module = RiruVersionedModuleInfo{
+        .moduleApiVersion = RIRU_MODULE_API_VERSION,
+        .moduleInfo= RiruModuleInfo{
+                .supportHide = true,
+                .version = RIRU_MODULE_VERSION,
+                .versionName = RIRU_MODULE_VERSION_NAME,
+                .onModuleLoaded = onModuleLoaded,
+                .shouldSkipUid = shouldSkipUid,
+                .forkAndSpecializePre = forkAndSpecializePre,
+                .forkAndSpecializePost = forkAndSpecializePost,
+                .forkSystemServerPre = forkSystemServerPre,
+                .forkSystemServerPost = forkSystemServerPost,
+                .specializeAppProcessPre = specializeAppProcessPre,
+                .specializeAppProcessPost = specializeAppProcessPost
+        }
+};
+
 #ifndef RIRU_MODULE_LEGACY_INIT
 RiruVersionedModuleInfo *init(Riru *riru) {
-    if (module == nullptr) {
-        module = (RiruVersionedModuleInfo *) malloc(sizeof(RiruVersionedModuleInfo));
-        memset(module, 0, sizeof(RiruModuleInfo));
-        module->moduleInfo.supportHide = true;
-        module->moduleInfo.version = RIRU_MODULE_VERSION;
-        module->moduleInfo.versionName = RIRU_MODULE_VERSION_NAME;
-        module->moduleInfo.onModuleLoaded = onModuleLoaded;
-        module->moduleInfo.shouldSkipUid = shouldSkipUid;
-        module->moduleInfo.forkAndSpecializePre = forkAndSpecializePre;
-        module->moduleInfo.forkAndSpecializePost = forkAndSpecializePost;
-        module->moduleInfo.specializeAppProcessPre = specializeAppProcessPre;
-        module->moduleInfo.specializeAppProcessPost = specializeAppProcessPost;
-        module->moduleInfo.forkSystemServerPre = forkSystemServerPre;
-        module->moduleInfo.forkSystemServerPost = forkSystemServerPost;
-    }
-
     auto core_max_api_version = riru->riruApiVersion;
-    if (core_max_api_version < RIRU_MODULE_MIN_API_VERSION) {
-        // This is possible if the user downgrade Riru
-        return nullptr;
-    }
     riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
-    module->moduleApiVersion = riru_api_version;
+    module.moduleApiVersion = riru_api_version;
 
     riru_api = riru->riruApi;
     riru_magisk_module_path = riru->magiskModulePath;
-    return module;
+    return &module;
 }
 #else
 RiruVersionedModuleInfo *init(Riru *riru) {
     static int step = 0;
     step += 1;
 
-    if (module == nullptr) {
-        module = (RiruVersionedModuleInfo *) malloc(sizeof(RiruVersionedModuleInfo));
-        memset(module, 0, sizeof(RiruModuleInfo));
-        module->moduleInfo.supportHide = true;
-        module->moduleInfo.version = RIRU_MODULE_VERSION;
-        module->moduleInfo.versionName = RIRU_MODULE_VERSION_NAME;
-        module->moduleInfo.onModuleLoaded = onModuleLoaded;
-        module->moduleInfo.shouldSkipUid = shouldSkipUid;
-        module->moduleInfo.forkAndSpecializePre = forkAndSpecializePre;
-        module->moduleInfo.forkAndSpecializePost = forkAndSpecializePost;
-        module->moduleInfo.specializeAppProcessPre = specializeAppProcessPre;
-        module->moduleInfo.specializeAppProcessPost = specializeAppProcessPost;
-        module->moduleInfo.forkSystemServerPre = forkSystemServerPre;
-        module->moduleInfo.forkSystemServerPost = forkSystemServerPost;
-    }
-
     switch (step) {
         case 1: {
             auto core_max_api_version = riru->riruApiVersion;
-            if (core_max_api_version < RIRU_MODULE_MIN_API_VERSION) {
-                // This is possible if the user downgrade Riru
-                return nullptr;
-            }
-
             riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
             if (riru_api_version >= 24) {
-                module->moduleApiVersion = riru_api_version;
+                module.moduleApiVersion = riru_api_version;
                 riru_api = riru->riruApi;
                 riru_magisk_module_path = riru->magiskModulePath;
-                return module;
+                return &module;
             } else {
                 return (RiruVersionedModuleInfo *) &riru_api_version;
             }
         }
         case 2: {
             riru_api = (RiruApi *) riru;
-            return (RiruVersionedModuleInfo *) &module->moduleInfo;
+            return (RiruVersionedModuleInfo *) &module.moduleInfo;
         }
+        case 3:
         default: {
             return nullptr;
         }
