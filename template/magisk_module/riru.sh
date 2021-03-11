@@ -12,7 +12,7 @@ RIRU_MODULE_API_VERSION=%%%RIRU_MODULE_API_VERSION%%%
 RIRU_MODULE_MIN_API_VERSION=%%%RIRU_MODULE_MIN_API_VERSION%%%
 RIRU_MODULE_MIN_RIRU_VERSION_NAME="%%%RIRU_MODULE_MIN_RIRU_VERSION_NAME%%%"
 
-# This function will be used when util_functions.sh not exits
+# This function will be used when util_functions.sh not exists
 check_riru_version() {
   RIRU_CORE_MODULES_PATH=/data/adb/modules/riru-core
   RIRU_CORE_MODULES_UPDATE_PATH=/data/adb/modules_update/riru-core
@@ -33,7 +33,7 @@ check_riru_version() {
   fi
 }
 
-# This function will be used when util_functions.sh not exits
+# This function will be used when util_functions.sh not exists
 enforce_install_from_magisk_app() {
   if $BOOTMOE; then
     ui_print "- Installing from Magisk app"
