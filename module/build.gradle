@@ -41,7 +41,7 @@ dependencies {
     // you may have to add android.prefabVersion=1.1.2 in your gradle.properties.
     // See https://github.com/google/prefab/issues/122
 
-    implementation 'dev.rikka.ndk:riru:24.0.0'
+    implementation 'dev.rikka.ndk:riru:25.0.0'
 }
 
 def outDir = file("$rootDir/out")

@@ -4,6 +4,18 @@
 #include <malloc.h>
 #include <cstring>
 
+static int shouldSkipUid(int uid) {
+    // By default (if the module does not provide this function in init), Riru will only call
+    // module functions in "normal app processes" (10000 <= uid % 100000 <= 19999)
+
+    // Provide this function so that the module can control if a specific uid should be skipped
+
+    // Riru 25:
+    // This function is removed for modules which has adapted 25, means forkAndSpecialize and
+    // specializeAppProcess will be called for all uids.
+    return false;
+}
+
 static void forkAndSpecializePre(
         JNIEnv *env, jclass clazz, jint *uid, jint *gid, jintArray *gids, jint *runtimeFlags,
         jobjectArray *rlimits, jint *mountExternal, jstring *seInfo, jstring *niceName,
@@ -21,6 +33,11 @@ static void forkAndSpecializePost(JNIEnv *env, jclass clazz, jint res) {
 
     if (res == 0) {
         // In app process
+
+        // When unload allowed is true, the module will be unloaded (dlclose) by Riru
+        // If this modules has hooks installed, DONOT set it to true, or there will be SIGSEGV
+        // This value will be automatically reset to false before the "pre" function is called
+        riru_set_unload_allowed(true);
     } else {
         // In zygote process
     }
@@ -41,6 +58,10 @@ static void specializeAppProcessPost(
         JNIEnv *env, jclass clazz) {
     // Called "after" com_android_internal_os_Zygote_nativeSpecializeAppProcess in frameworks/base/core/jni/com_android_internal_os_Zygote.cpp
 
+    // When unload allowed is true, the module will be unloaded (dlclose) by Riru
+    // If this modules has hooks installed, DONOT set it to true, or there will be SIGSEGV
+    // This value will be automatically reset to false before the "pre" function is called
+    riru_set_unload_allowed(true);
 }
 
 static void forkSystemServerPre(
@@ -56,17 +77,15 @@ static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
 
     if (res == 0) {
         // In system server process
+
+        // When unload allowed is true, the module will be unloaded (dlclose) by Riru
+        // If this modules has hooks installed, DONOT set it to true, or there will be SIGSEGV
+        // This value will be automatically reset to false before the "pre" function is called
+
+        riru_set_unload_allowed(true);
     } else {
         // In zygote process
     }
-}
-
-static int shouldSkipUid(int uid) {
-    // By default (if the module does not provide this function in init), Riru will only call
-    // module functions in "normal app processes" (10000 <= uid % 100000 <= 19999)
-
-    // Provide this function so that the module can control if a specific uid should be skipped
-    return false;
 }
 
 static void onModuleLoaded() {
@@ -76,8 +95,8 @@ static void onModuleLoaded() {
 extern "C" {
 
 int riru_api_version;
-RiruApi *riru_api = nullptr;
 const char *riru_magisk_module_path = nullptr;
+int *riru_allow_unload = nullptr;
 
 static auto module = RiruVersionedModuleInfo{
         .moduleApiVersion = RIRU_MODULE_API_VERSION,
@@ -86,7 +105,6 @@ static auto module = RiruVersionedModuleInfo{
                 .version = RIRU_MODULE_VERSION,
                 .versionName = RIRU_MODULE_VERSION_NAME,
                 .onModuleLoaded = onModuleLoaded,
-                .shouldSkipUid = shouldSkipUid,
                 .forkAndSpecializePre = forkAndSpecializePre,
                 .forkAndSpecializePost = forkAndSpecializePost,
                 .forkSystemServerPre = forkSystemServerPre,
@@ -102,8 +120,10 @@ RiruVersionedModuleInfo *init(Riru *riru) {
     riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
     module.moduleApiVersion = riru_api_version;
 
-    riru_api = riru->riruApi;
     riru_magisk_module_path = strdup(riru->magiskModulePath);
+    if (riru_api_version < 25) {
+        riru_allow_unload = riru->allowUnload;
+    }
     return &module;
 }
 #else
@@ -115,9 +135,13 @@ RiruVersionedModuleInfo *init(Riru *riru) {
         case 1: {
             auto core_max_api_version = riru->riruApiVersion;
             riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
+            if (riru_api_version < 25) {
+                module.moduleInfo.unused = (void *) shouldSkipUid;
+            } else {
+                riru_allow_unload = riru->allowUnload;
+            }
             if (riru_api_version >= 24) {
                 module.moduleApiVersion = riru_api_version;
-                riru_api = riru->riruApi;
                 riru_magisk_module_path = strdup(riru->magiskModulePath);
                 return &module;
             } else {
@@ -125,7 +149,6 @@ RiruVersionedModuleInfo *init(Riru *riru) {
             }
         }
         case 2: {
-            riru_api = (RiruApi *) riru;
             return (RiruVersionedModuleInfo *) &module.moduleInfo;
         }
         case 3:
