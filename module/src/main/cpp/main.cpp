@@ -83,7 +83,11 @@ static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
 }
 
 static void onModuleLoaded() {
-    // Called when this library is loaded by Riru
+    // Called when this library is loaded and "hidden" by Riru (see Riru's hide.cpp)
+
+    // If you want to use threads, start them here rather than the constructors
+    // __attribute__((constructor)) or constructors of static variables,
+    // or the "hide" will cause SIGSEGV
 }
 
 extern "C" {
