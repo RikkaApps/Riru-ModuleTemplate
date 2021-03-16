@@ -121,7 +121,7 @@ RiruVersionedModuleInfo *init(Riru *riru) {
     module.moduleApiVersion = riru_api_version;
 
     riru_magisk_module_path = strdup(riru->magiskModulePath);
-    if (riru_api_version < 25) {
+    if (riru_api_version >= 25) {
         riru_allow_unload = riru->allowUnload;
     }
     return &module;
