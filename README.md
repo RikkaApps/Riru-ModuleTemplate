@@ -29,6 +29,11 @@ In other cases, our recommendation is, if a new version Riru of released, raise 
 
 ## API changes
 
+### API 25 (Riru v25)
+
+- Modules can be unloaded (see `main.cpp`)
+- `shouldSkipUid` is removed for API 25 modules
+
 ### API 24 (Riru v24)
 
 - The Riru API version is unified with Riru version, now the API version is 24

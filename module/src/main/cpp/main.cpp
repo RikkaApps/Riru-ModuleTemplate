@@ -77,12 +77,6 @@ static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
 
     if (res == 0) {
         // In system server process
-
-        // When unload allowed is true, the module will be unloaded (dlclose) by Riru
-        // If this modules has hooks installed, DONOT set it to true, or there will be SIGSEGV
-        // This value will be automatically reset to false before the "pre" function is called
-
-        riru_set_unload_allowed(true);
     } else {
         // In zygote process
     }
