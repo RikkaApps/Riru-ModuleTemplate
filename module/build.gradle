@@ -46,7 +46,6 @@ dependencies {
 
 def outDir = file("$rootDir/out")
 def magiskDir = file("$outDir/magisk_module")
-def zipName = "${moduleProp['id']}-${moduleVersion}.zip"
 
 import org.apache.tools.ant.filters.FixCrLfFilter
 
@@ -62,8 +61,23 @@ static def calcSha256(file) {
 }
 
 android.libraryVariants.all { variant ->
-    def task = variant.assembleProvider.get()
-    task.doLast {
+    def variantCapped = variant.name.capitalize()
+    def variantLowered = variant.name.toLowerCase()
+
+    def zipName = "${moduleId}-${moduleVersion}-${variantLowered}.zip"
+
+    def is_windows = org.gradle.internal.os.OperatingSystem.current().isWindows()
+
+    task("zip${variantCapped}", type: Zip) {
+        dependsOn("assemble${variantCapped}")
+        from magiskDir
+        archiveName zipName
+        destinationDir outDir
+    }
+
+    variant.outputs.all {
+        def task = variant.assembleProvider.get()
+
         // clear
         delete { delete magiskDir }
 
@@ -111,12 +125,41 @@ android.libraryVariants.all { variant ->
             if (f.directory) return
             file(f.file.path + ".sha256sum").text = calcSha256(f.file)
         }
-    }
-    task.finalizedBy zipMagiskMoudle
-}
 
-task zipMagiskMoudle(type: Zip) {
-    from magiskDir
-    archiveName zipName
-    destinationDir outDir
+        task.finalizedBy("zip${variantCapped}")
+    }
+
+    task("push${variantCapped}", type: Exec) {
+        dependsOn("assemble${variantCapped}")
+        workingDir outDir
+        def commands = [android.adbExecutable, "push",
+                        zipName,
+                        "/data/local/tmp/"]
+        if (is_windows) {
+            commandLine 'cmd', '/c', commands.join(" ")
+        } else {
+            commandLine commands
+        }
+    }
+
+    task("flash${variantCapped}", type: Exec) {
+        dependsOn("push${variantCapped}")
+        def commands = [android.adbExecutable, "shell", "su", "-c",
+                        "magisk --install-module /data/local/tmp/${zipName}"]
+        if (is_windows) {
+            commandLine 'cmd', '/c', commands.join(" ")
+        } else {
+            commandLine commands
+        }
+    }
+
+    task("flashAndReoot${variantCapped}", type: Exec) {
+        dependsOn("flash${variantCapped}")
+        def commands = [android.adbExecutable, "shell", "reboot"]
+        if (is_windows) {
+            commandLine 'cmd', '/c', commands.join(" ")
+        } else {
+            commandLine commands
+        }
+    }
 }
