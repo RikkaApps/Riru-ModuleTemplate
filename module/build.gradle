@@ -43,7 +43,6 @@ dependencies {
     implementation 'dev.rikka.ndk:riru:25.0.0'
 }
 
-def outDir = file("$rootDir/out")
 def magiskDir = file("$outDir/magisk_module")
 
 import org.apache.tools.ant.filters.FixCrLfFilter
