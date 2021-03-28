@@ -43,7 +43,6 @@ extract "$ZIPFILE" 'uninstall.sh' "$MODPATH"
 
 # Riru v24+ load files from the "riru" folder in the Magisk module folder
 # This "riru" folder is also used to determine if a Magisk module is a Riru module
-# In addition, Riru v24+ does not require the "libriru_" prefix, you can change this if this module does not need to support Riru pre-v24
 
 mkdir "$MODPATH/riru"
 mkdir "$MODPATH/riru/lib"
@@ -51,21 +50,21 @@ mkdir "$MODPATH/riru/lib64"
 
 if [ "$ARCH" = "arm" ] || [ "$ARCH" = "arm64" ]; then
   ui_print "- Extracting arm libraries"
-  extract "$ZIPFILE" "lib/armeabi-v7a/libriru_$RIRU_MODULE_ID.so" "$MODPATH/riru/lib" true
+  extract "$ZIPFILE" "lib/armeabi-v7a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib" true
 
   if [ "$IS64BIT" = true ]; then
     ui_print "- Extracting arm64 libraries"
-    extract "$ZIPFILE" "lib/arm64-v8a/libriru_$RIRU_MODULE_ID.so" "$MODPATH/riru/lib64" true
+    extract "$ZIPFILE" "lib/arm64-v8a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
   fi
 fi
 
 if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x64" ]; then
   ui_print "- Extracting x86 libraries"
-  extract "$ZIPFILE" "lib/x86/libriru_$RIRU_MODULE_ID.so" "$MODPATH/riru/lib" true
+  extract "$ZIPFILE" "lib/x86/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib" true
 
   if [ "$IS64BIT" = true ]; then
     ui_print "- Extracting x64 libraries"
-    extract "$ZIPFILE" "lib/x86_64/libriru_$RIRU_MODULE_ID.so" "$MODPATH/riru/lib64" true
+    extract "$ZIPFILE" "lib/x86_64/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
   fi
 fi
 
@@ -78,7 +77,7 @@ fi
 if [ "$RIRU_API" -lt 11 ]; then
   ui_print "- Using old Riru"
   mv "$MODPATH/riru" "$MODPATH/system"
-  mkdir -p "/data/adb/riru/modules/$RIRU_MODULE_ID"
+  mkdir -p "/data/adb/riru/modules/$RIRU_MODULE_ID_PRE24"
 fi
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644

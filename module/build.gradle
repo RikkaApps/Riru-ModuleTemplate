@@ -8,8 +8,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         externalNativeBuild {
             cmake {
-                // You can remove this "riru_" prefix if this module does not need to support Riru pre-v24
-                arguments "-DMODULE_NAME:STRING=riru_$moduleId",
+                arguments "-DMODULE_NAME:STRING=$moduleLibraryName",
                         "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion",
                         "-DRIRU_MODULE_VERSION=$moduleVersionCode",
                         "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\"",
@@ -64,7 +63,7 @@ android.libraryVariants.all { variant ->
     def variantCapped = variant.name.capitalize()
     def variantLowered = variant.name.toLowerCase()
 
-    def zipName = "${moduleId}-${moduleVersion}-${variantLowered}.zip"
+    def zipName = "${magiskModuleId.replace('_', '-')}-${moduleVersion}-${variantLowered}.zip"
 
     def is_windows = org.gradle.internal.os.OperatingSystem.current().isWindows()
 
@@ -93,10 +92,15 @@ android.libraryVariants.all { variant ->
             into magiskDir.path
             include 'riru.sh'
             filter { line ->
-                line.replaceAll('%%%RIRU_MODULE_ID%%%', moduleId)
-                        .replaceAll('%%%RIRU_MODULE_API_VERSION%%%', moduleRiruApiVersion.toString())
+                def replaced = line.replaceAll('%%%RIRU_MODULE_API_VERSION%%%', moduleRiruApiVersion.toString())
                         .replaceAll('%%%RIRU_MODULE_MIN_API_VERSION%%%', moduleMinRiruApiVersion.toString())
                         .replaceAll('%%%RIRU_MODULE_MIN_RIRU_VERSION_NAME%%%', moduleMinRiruVersionName)
+                if (moduleMinRiruApiVersion >= 24) {
+                    replaced.replaceAll('%%%RIRU_MODULE_LIB_NAME%%%', moduleLibraryName)
+                } else {
+                    replaced.replaceAll('%%%RIRU_MODULE_LIB_NAME%%%', moduleLibraryName)
+                            .replaceAll('%%%RIRU_MODULE_ID_PRE24%%%', moduleLibraryName.substring("riru_".length()))
+                }
             }
             filter(FixCrLfFilter.class,
                     eol: FixCrLfFilter.CrLf.newInstance("lf"))
@@ -105,6 +109,16 @@ android.libraryVariants.all { variant ->
         Files.copy(file("$rootDir/template/magisk_module/.gitattributes").toPath(), file("${magiskDir.path}/.gitattributes").toPath())
 
         // generate module.prop
+
+        def moduleProp = [
+                id         : magiskModuleId,
+                name       : moduleName,
+                version    : moduleVersion,
+                versionCode: moduleVersionCode.toString(),
+                author     : moduleAuthor,
+                description: moduleDescription,
+        ]
+
         def modulePropText = ""
         moduleProp.each { k, v -> modulePropText += "$k=$v\n" }
         modulePropText = modulePropText.trim()
