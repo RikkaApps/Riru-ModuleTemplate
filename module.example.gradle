@@ -17,6 +17,9 @@ ext {
     /*
        Magisk module ID
        Since Magisk use it to distinguish different modules, you should never change it.
+
+       Note, the older version of the template uses '-' instead of '_', if your are upgrading from
+       the older version, please pay attention.
     */
     magiskModuleId = "riru_template"
 
