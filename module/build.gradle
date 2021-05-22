@@ -164,7 +164,7 @@ afterEvaluate {
             }
         }
 
-        task("flashAndReoot${variantCapped}", type: Exec) {
+        task("flashAndReboot${variantCapped}", type: Exec) {
             dependsOn("flash${variantCapped}")
             def commands = [android.adbExecutable, "shell", "reboot"]
             if (isWindows) {
