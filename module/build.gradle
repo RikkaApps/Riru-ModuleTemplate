@@ -69,7 +69,6 @@ afterEvaluate {
             from(templatePath) {
                 include 'riru.sh'
                 filter(ReplaceTokens.class, tokens: [
-                        //"RIRU_MODULE_ID"                   : moduleId,
                         "RIRU_MODULE_LIB_NAME"             : moduleLibraryName,
                         "RIRU_MODULE_API_VERSION"          : moduleRiruApiVersion.toString(),
                         "RIRU_MODULE_MIN_API_VERSION"      : moduleMinRiruApiVersion.toString(),

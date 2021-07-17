@@ -4,18 +4,6 @@
 #include <malloc.h>
 #include <cstring>
 
-static int shouldSkipUid(int uid) {
-    // By default (if the module does not provide this function in init), Riru will only call
-    // module functions in "normal app processes" (10000 <= uid % 100000 <= 19999)
-
-    // Provide this function so that the module can control if a specific uid should be skipped
-
-    // Riru 25:
-    // This function is removed for modules which has adapted 25, means forkAndSpecialize and
-    // specializeAppProcess will be called for all uids.
-    return false;
-}
-
 static void forkAndSpecializePre(
         JNIEnv *env, jclass clazz, jint *uid, jint *gid, jintArray *gids, jint *runtimeFlags,
         jobjectArray *rlimits, jint *mountExternal, jstring *seInfo, jstring *niceName,
@@ -112,7 +100,6 @@ static auto module = RiruVersionedModuleInfo{
         }
 };
 
-#ifndef RIRU_MODULE_LEGACY_INIT
 RiruVersionedModuleInfo *init(Riru *riru) {
     auto core_max_api_version = riru->riruApiVersion;
     riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
@@ -124,36 +111,4 @@ RiruVersionedModuleInfo *init(Riru *riru) {
     }
     return &module;
 }
-#else
-RiruVersionedModuleInfo *init(Riru *riru) {
-    static int step = 0;
-    step += 1;
-
-    switch (step) {
-        case 1: {
-            auto core_max_api_version = riru->riruApiVersion;
-            riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
-            if (riru_api_version < 25) {
-                module.moduleInfo.unused = (void *) shouldSkipUid;
-            } else {
-                riru_allow_unload = riru->allowUnload;
-            }
-            if (riru_api_version >= 24) {
-                module.moduleApiVersion = riru_api_version;
-                riru_magisk_module_path = strdup(riru->magiskModulePath);
-                return &module;
-            } else {
-                return (RiruVersionedModuleInfo *) &riru_api_version;
-            }
-        }
-        case 2: {
-            return (RiruVersionedModuleInfo *) &module.moduleInfo;
-        }
-        case 3:
-        default: {
-            return nullptr;
-        }
-    }
-}
-#endif
 }

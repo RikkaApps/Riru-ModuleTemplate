@@ -1,15 +1,14 @@
 ext {
     /*
        This name will be used in the name of the so file ("lib${moduleLibraryName}.so").
-       If this module need to support Riru pre-v24 (API < 24), moduleLibraryName must start with "riru_".
     */
-    moduleLibraryName = "riru_template"
+    moduleLibraryName = "template"
 
     /* Minimal supported Riru API version, used in the version check of riru.sh */
-    moduleMinRiruApiVersion = 9
+    moduleMinRiruApiVersion = 24
 
     /* The version name of minimal supported Riru, used in the version check of riru.sh */
-    moduleMinRiruVersionName = "v22.0"
+    moduleMinRiruVersionName = "v24.0.0"
 
     /* Maximum supported Riru API version, used in the version check of riru.sh */
     moduleRiruApiVersion = 25
@@ -25,7 +24,7 @@ ext {
 
     moduleName = "Template"
     moduleAuthor = "Template"
-    moduleDescription = "Riru module template. This modules requires Riru $moduleMinRiruVersionName or above."
+    moduleDescription = "Riru module template. Requires Riru $moduleMinRiruVersionName or above."
     moduleVersion = "v25.0.0"
     moduleVersionCode = 25
 }

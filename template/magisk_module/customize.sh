@@ -38,7 +38,6 @@ fi
 ui_print "- Extracting module files"
 
 extract "$ZIPFILE" 'module.prop' "$MODPATH"
-extract "$ZIPFILE" 'post-fs-data.sh' "$MODPATH"
 extract "$ZIPFILE" 'uninstall.sh' "$MODPATH"
 
 # Riru v24+ load files from the "riru" folder in the Magisk module folder
@@ -66,18 +65,6 @@ if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x64" ]; then
     ui_print "- Extracting x64 libraries"
     extract "$ZIPFILE" "lib/x86_64/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
   fi
-fi
-
-# Riru pre-v24 uses "/system", "/data/adb/riru/modules" is used as the module list
-# If "/data/adb/riru/modules/example" exists, Riru will try to load "/system/lib(64)/libriru_example.so
-
-# If your module does not need to support Riru pre-v24, you can raise the value of "moduleMinRiruApiVersion" in "module.gradle"
-# and remove this part
-
-if [ "$RIRU_API" -lt 11 ]; then
-  ui_print "- Using old Riru"
-  mv "$MODPATH/riru" "$MODPATH/system"
-  mkdir -p "/data/adb/riru/modules/$RIRU_MODULE_ID_PRE24"
 fi
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644
