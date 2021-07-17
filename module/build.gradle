@@ -1,3 +1,8 @@
+import org.apache.tools.ant.filters.FixCrLfFilter
+import org.apache.tools.ant.filters.ReplaceTokens
+
+import java.security.MessageDigest
+
 apply plugin: 'com.android.library'
 apply from: file(rootProject.file('module.gradle'))
 
@@ -37,98 +42,68 @@ dependencies {
     // you can copy this file from https://github.com/RikkaApps/Riru/blob/master/riru/src/main/cpp/include_riru/riru.h
 
     // The default version of prefab in AGP has problem to process header only package,
-    // you may have to add android.prefabVersion=1.1.2 in your gradle.properties.
+    // you may have to add "android.prefabVersion" in your gradle.properties.
     // See https://github.com/google/prefab/issues/122
 
     implementation 'dev.rikka.ndk:riru:25.0.0'
 }
 
-def magiskDir = file("$outDir/magisk_module")
-def isWindows = org.gradle.internal.os.OperatingSystem.current().isWindows()
-
-import org.apache.tools.ant.filters.FixCrLfFilter
-
-import java.nio.file.Files
-import java.security.MessageDigest
-
-static def calcSha256(file) {
-    def md = MessageDigest.getInstance("SHA-256")
-    file.eachByte 4096, { bytes, size ->
-        md.update(bytes, 0, size);
-    }
-    return md.digest().encodeHex()
-}
 
 afterEvaluate {
     android.libraryVariants.forEach { variant ->
         def variantCapped = variant.name.capitalize()
         def variantLowered = variant.name.toLowerCase()
-        def zipName = "${magiskModuleId.replace('_', '-')}-${moduleVersion}-${variantLowered}.zip"
 
-        task("prepareMagiskFiles${variantCapped}") {
+        def zipName = "${magiskModuleId.replace('_', '-')}-${moduleVersion}-${variantLowered}.zip"
+        def magiskDir = file("$outDir/magisk_module")
+
+        task("prepareMagiskFiles${variantCapped}", type: Sync) {
             dependsOn("assemble$variantCapped")
 
-            doFirst {
-                delete { delete magiskDir }
+            def templatePath = "$rootDir/template/magisk_module"
 
-                copy {
-                    from "$rootDir/template/magisk_module"
-                    into magiskDir.path
-                    exclude 'riru.sh'
-                }
-
-                copy {
-                    from "$rootDir/template/magisk_module"
-                    into magiskDir.path
-                    include 'riru.sh'
-                    filter { line ->
-                        def replaced = line.replaceAll('%%%RIRU_MODULE_API_VERSION%%%', moduleRiruApiVersion.toString())
-                                .replaceAll('%%%RIRU_MODULE_MIN_API_VERSION%%%', moduleMinRiruApiVersion.toString())
-                                .replaceAll('%%%RIRU_MODULE_MIN_RIRU_VERSION_NAME%%%', moduleMinRiruVersionName)
-                        if (moduleMinRiruApiVersion >= 24) {
-                            replaced.replaceAll('%%%RIRU_MODULE_LIB_NAME%%%', moduleLibraryName)
-                        } else {
-                            replaced.replaceAll('%%%RIRU_MODULE_LIB_NAME%%%', moduleLibraryName)
-                                    .replaceAll('%%%RIRU_MODULE_ID_PRE24%%%', moduleLibraryName.substring("riru_".length()))
-                        }
-                    }
-                    filter(FixCrLfFilter.class,
-                            eol: FixCrLfFilter.CrLf.newInstance("lf"))
-                }
-
-                // Copy .git files manually since gradle exclude it by default
-                Files.copy(file("$rootDir/template/magisk_module/.gitattributes").toPath(), file("${magiskDir.path}/.gitattributes").toPath())
-
-                def moduleProp = [
+            into magiskDir
+            from(templatePath) {
+                exclude 'riru.sh', 'module.prop'
+            }
+            from(templatePath) {
+                include 'riru.sh'
+                filter(ReplaceTokens.class, tokens: [
+                        //"RIRU_MODULE_ID"                   : moduleId,
+                        "RIRU_MODULE_LIB_NAME"             : moduleLibraryName,
+                        "RIRU_MODULE_API_VERSION"          : moduleRiruApiVersion.toString(),
+                        "RIRU_MODULE_MIN_API_VERSION"      : moduleMinRiruApiVersion.toString(),
+                        "RIRU_MODULE_MIN_RIRU_VERSION_NAME": moduleMinRiruVersionName,
+                ])
+                filter(FixCrLfFilter.class,
+                        eol: FixCrLfFilter.CrLf.newInstance("lf"))
+            }
+            from(templatePath) {
+                include 'module.prop'
+                expand([
                         id         : magiskModuleId,
                         name       : moduleName,
                         version    : moduleVersion,
                         versionCode: moduleVersionCode.toString(),
                         author     : moduleAuthor,
                         description: moduleDescription,
-                ]
-
-                def modulePropText = ""
-                moduleProp.each { k, v -> modulePropText += "$k=$v\n" }
-                modulePropText = modulePropText.trim()
-                file("$magiskDir/module.prop").text = modulePropText
+                ])
+                filter(FixCrLfFilter.class,
+                        eol: FixCrLfFilter.CrLf.newInstance("lf"))
             }
-
-            def nativeOutDir = file("build/intermediates/cmake/$variant.name/obj")
-
+            from("$buildDir/intermediates/stripped_native_libs/$variantLowered/out/lib") {
+                into 'lib'
+            }
             doLast {
-                copy {
-                    from "$nativeOutDir"
-                    into "$magiskDir/lib"
-                    exclude "**/*.txt"
-                }
-
-                // generate sha1sum
-                fileTree("$magiskDir").matching {
-                    exclude "README.md", "META-INF"
-                }.visit { f ->
+                fileTree("$magiskDir").visit { f ->
                     if (f.directory) return
-                    file(f.file.path + ".sha256sum").text = calcSha256(f.file)
+                    if (f.file.name == '.gitattributes') return
+
+                    def md = MessageDigest.getInstance("SHA-256")
+                    f.file.eachByte 4096, { bytes, size ->
+                        md.update(bytes, 0, size)
+                    }
+                    file(f.file.path + ".sha256sum").text = md.digest().encodeHex()
                 }
             }
         }
@@ -143,35 +118,18 @@ afterEvaluate {
         task("push${variantCapped}", type: Exec) {
             dependsOn("assemble${variantCapped}")
             workingDir outDir
-            def commands = [android.adbExecutable, "push",
-                            zipName,
-                            "/data/local/tmp/"]
-            if (isWindows) {
-                commandLine 'cmd', '/c', commands.join(" ")
-            } else {
-                commandLine commands
-            }
+            commandLine android.adbExecutable, "push", zipName, "/data/local/tmp/"
         }
 
         task("flash${variantCapped}", type: Exec) {
             dependsOn("push${variantCapped}")
-            def commands = [android.adbExecutable, "shell", "su", "-c",
-                            "magisk --install-module /data/local/tmp/${zipName}"]
-            if (isWindows) {
-                commandLine 'cmd', '/c', commands.join(" ")
-            } else {
-                commandLine commands
-            }
+            commandLine android.adbExecutable, "shell", "su", "-c",
+                    "magisk --install-module /data/local/tmp/${zipName}"
         }
 
         task("flashAndReboot${variantCapped}", type: Exec) {
             dependsOn("flash${variantCapped}")
-            def commands = [android.adbExecutable, "shell", "reboot"]
-            if (isWindows) {
-                commandLine 'cmd', '/c', commands.join(" ")
-            } else {
-                commandLine commands
-            }
+            commandLine android.adbExecutable, "shell", "reboot"
         }
 
         variant.assembleProvider.get().finalizedBy("zip${variantCapped}")
