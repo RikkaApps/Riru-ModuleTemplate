@@ -3,6 +3,7 @@
 #include <riru.h>
 #include <malloc.h>
 #include <cstring>
+#include <config.h>
 
 static void forkAndSpecializePre(
         JNIEnv *env, jclass clazz, jint *uid, jint *gid, jintArray *gids, jint *runtimeFlags,
@@ -85,11 +86,11 @@ const char *riru_magisk_module_path = nullptr;
 int *riru_allow_unload = nullptr;
 
 static auto module = RiruVersionedModuleInfo{
-        .moduleApiVersion = RIRU_MODULE_API_VERSION,
+        .moduleApiVersion = riru::moduleApiVersion,
         .moduleInfo= RiruModuleInfo{
                 .supportHide = true,
-                .version = RIRU_MODULE_VERSION,
-                .versionName = RIRU_MODULE_VERSION_NAME,
+                .version = riru::moduleVersionCode,
+                .versionName = riru::moduleVersionName,
                 .onModuleLoaded = onModuleLoaded,
                 .forkAndSpecializePre = forkAndSpecializePre,
                 .forkAndSpecializePost = forkAndSpecializePost,
@@ -102,7 +103,7 @@ static auto module = RiruVersionedModuleInfo{
 
 RiruVersionedModuleInfo *init(Riru *riru) {
     auto core_max_api_version = riru->riruApiVersion;
-    riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
+    riru_api_version = core_max_api_version <= riru::moduleApiVersion ? core_max_api_version : riru::moduleApiVersion;
     module.moduleApiVersion = riru_api_version;
 
     riru_magisk_module_path = strdup(riru->magiskModulePath);

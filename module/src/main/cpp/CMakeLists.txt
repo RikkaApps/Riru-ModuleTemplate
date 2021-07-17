@@ -7,10 +7,8 @@ else ()
 endif ()
 
 add_definitions(-DRIRU_MODULE)
-add_definitions(-DRIRU_MODULE_API_VERSION=${RIRU_MODULE_API_VERSION})
-add_definitions(-DRIRU_MODULE_VERSION=${RIRU_MODULE_VERSION})
-add_definitions(-DRIRU_MODULE_VERSION_NAME=${RIRU_MODULE_VERSION_NAME})
-add_definitions(-DRIRU_MODULE_MIN_API_VERSION=${RIRU_MODULE_MIN_API_VERSION})
+
+configure_file(template/config.cpp config.cpp)
 
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
@@ -35,6 +33,7 @@ set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 find_package(riru REQUIRED CONFIG)
 
-add_library(${MODULE_NAME} SHARED main.cpp)
+include_directories(include)
+
+add_library(${MODULE_NAME} SHARED main.cpp ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
 target_link_libraries(${MODULE_NAME} log riru::riru)
-set_target_properties(${MODULE_NAME} PROPERTIES LINK_FLAGS_RELEASE -s)
