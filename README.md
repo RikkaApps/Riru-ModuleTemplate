@@ -13,21 +13,11 @@
 
 A Riru module is a Magisk module, please read [Magisk module document](https://topjohnwu.github.io/Magisk/guides.html#magisk-modules) first.
 
-### Riru v24+
-
 If the folder `$MODPATH/riru` exists, the module is considered as a Riru module. All files in `$MODPATH/riru/lib(64)` will be loaded by Riru.
 
-### Riru pre-v24
-
-If the folder `/data/adb/riru/modules/<name>` exists, `/system/lib(64)/libriru_<name>.so` will be loaded by Riru. Module installer needs to create this folder.
-
-## Choose the minimum supported version
-
-If your module is new, always choose the latest version.
-
-In other cases, our recommendation is, if a new version Riru of released, raise the minimum supported version to latest when the new Riru comes stable.
-
 ## API changes
+
+### 
 
 ### API 25 (Riru v25)
 
