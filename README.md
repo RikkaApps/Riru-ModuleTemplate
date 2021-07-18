@@ -20,8 +20,10 @@ If the folder `$MODPATH/riru` exists, the module is considered as a Riru module.
 ### API 26 (Riru v26)
 
 - Remove the support of pre-24 modules
-- For debugging purpose (libraries in `/dev` do not have stacktrace), if `$MODPATH/riru/lib(64)/libxxx` (no `.so` suffix) exists, `/system/lib(64)/libxxx.so` will be loaded
 - `/data/adb/dev_random` is planned to be moved to another place in the next major version
+- Libraries in `/dev` do not have stacktrace, developers have to put so file into `/system`, Riru v26 makes this simpler
+  
+  Create an empty file, `libxxx` (no `.so` suffix), at `$MODPATH/riru/lib(64)`, Riru will try to load `/system/lib(64)/libxxx.so`
 
 ### API 25 (Riru v25)
 
