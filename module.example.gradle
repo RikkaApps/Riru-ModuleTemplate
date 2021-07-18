@@ -11,7 +11,7 @@ ext {
     moduleMinRiruVersionName = "v24.0.0"
 
     /* Maximum supported Riru API version, used in the version check of riru.sh */
-    moduleRiruApiVersion = 25
+    moduleRiruApiVersion = 26
 
     /*
        Magisk module ID
@@ -25,6 +25,6 @@ ext {
     moduleName = "Template"
     moduleAuthor = "Template"
     moduleDescription = "Riru module template. Requires Riru $moduleMinRiruVersionName or above."
-    moduleVersion = "v25.0.0"
-    moduleVersionCode = 25
+    moduleVersion = "v26.0.0"
+    moduleVersionCode = 26
 }

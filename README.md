@@ -17,7 +17,11 @@ If the folder `$MODPATH/riru` exists, the module is considered as a Riru module.
 
 ## API changes
 
-### 
+### API 26 (Riru v26)
+
+- Remove the support of pre-24 modules
+- For debugging purpose (libraries in `/dev` do not have stacktrace), if `$MODPATH/riru/lib(64)/libxxx` (no `.so` suffix) exists, `/system/lib(64)/libxxx.so` will be loaded
+- `/data/adb/dev_random` is planned to be moved to another place in the next major version
 
 ### API 25 (Riru v25)
 
