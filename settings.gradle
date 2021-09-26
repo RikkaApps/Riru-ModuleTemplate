@@ -1,5 +1,25 @@
-include ':module'
-
 import org.apache.tools.ant.DirectoryScanner
 
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+    plugins {
+        id 'com.android.application' version '7.0.2'
+        id 'com.android.library' version '7.0.2'
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenLocal()
+        google()
+        mavenCentral()
+    }
+}
+
 DirectoryScanner.removeDefaultExclude('**/.gitattributes')
+
+include ':module'
